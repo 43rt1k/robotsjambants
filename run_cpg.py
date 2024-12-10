@@ -62,7 +62,8 @@ env = QuadrupedGymEnv(render=True,              # visualize
                     )
 
 # initialize Hopf Network, supply gait
-cpg = HopfNetwork(time_step=TIME_STEP, gait = 'BOUND', omega_swing=2*2*np.pi, omega_stance=2*2*np.pi, des_step_len=0.05)
+cpg = HopfNetwork(time_step=TIME_STEP, gait = 'TROT')
+#cpg = HopfNetwork(time_step=TIME_STEP, gait = 'BOUND', omega_swing=8*2*np.pi, omega_stance=2*2*np.pi, des_step_len=0.05)
 
 TEST_STEPS = int(10 / (TIME_STEP))
 t = np.arange(TEST_STEPS)*TIME_STEP
