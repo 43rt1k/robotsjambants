@@ -206,10 +206,12 @@ class QuadrupedGymEnv(gym.Env):
     if self._observation_space_mode == "DEFAULT":
       observation_high = (np.concatenate((self._robot_config.UPPER_ANGLE_JOINT,
                                          self._robot_config.VELOCITY_LIMITS,
-                                         np.array([1.0]*4))) +  OBSERVATION_EPS)
+                                         np.array([1.0]*4),
+                                         self._robot_config.POSITION_LIMITS)) +  OBSERVATION_EPS)
       observation_low = (np.concatenate((self._robot_config.LOWER_ANGLE_JOINT,
                                          -self._robot_config.VELOCITY_LIMITS,
-                                         np.array([-1.0]*4))) -  OBSERVATION_EPS)
+                                         np.array([-1.0]*4),
+                                         -self._robot_config.POSITION_LIMITS)) -  OBSERVATION_EPS)
     elif self._observation_space_mode == "LR_COURSE_OBS":
       # [TODO] Set observation upper and lower ranges. What are reasonable limits? 
       # Note 50 is arbitrary below, you may have more or less
@@ -239,7 +241,8 @@ class QuadrupedGymEnv(gym.Env):
     if self._observation_space_mode == "DEFAULT":
       self._observation = np.concatenate((self.robot.GetMotorAngles(), 
                                           self.robot.GetMotorVelocities(),
-                                          self.robot.GetBaseOrientation() ))
+                                          self.robot.GetBaseOrientation(), 
+                                          self.robot.GetBasePosition()))
     elif self._observation_space_mode == "LR_COURSE_OBS":
       # [TODO] Get observation from robot. What are reasonable measurements we could get on hardware?
       # if using the CPG, you can include states with self._cpg.get_r(), for example
@@ -352,6 +355,7 @@ class QuadrupedGymEnv(gym.Env):
     # [TODO] add your reward function. 
     yaw_reward = -0.2 * np.abs(self.robot.GetBaseOrientationRollPitchYaw()[2])
     drift_reward = -0.01 * abs(self.robot.GetBasePosition()[1])
+    dist_reward = 0.1 * self.robot.GetBasePosition()[0]
     
     energy_reward = 0 
     for tau,vel in zip(self._dt_motor_torques,self._dt_motor_velocities):
@@ -363,8 +367,8 @@ class QuadrupedGymEnv(gym.Env):
     reward = yaw_reward \
             + drift_reward \
             - 0.001 * energy_reward \
-            + velocity_reward \
-            + height_reward
+            + dist_reward
+            #+ height_reward \
     
     return max(reward,0) # keep rewards positive
 
